@@ -1,0 +1,7 @@
+name: graphics-pa1
+
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - pyglet==2.1.16
