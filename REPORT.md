@@ -47,9 +47,7 @@ python main.py
 
 ![실제 사진과 렌더링 비교](assets/comparison.gif)
 
-실제 Cornell Box 사진을 2초간 표시한 뒤 약 1초 동안 렌더링으로 한 번만 서서히 전환하고, 마지막 렌더링 화면에서 멈춘다. [원본 사진](assets/reference.jpg)과 [렌더링 이미지](assets/render.png)를 함께 포함하였다.
-
-벽의 색 배치, 천장과 바닥의 화면상 비율, 물체의 크기와 위치를 사진에 가깝게 맞추었다. 케이스의 곡면과 뚜껑의 세부 형태는 단순한 기하 모델로 근사하였다. PA2의 형상·배치 비교에 초점을 두어 단순 명암을 사용했으며, 실제 조명과 바닥 그림자는 구현하지 않았다.
+실제 Cornell Box 사진에서 렌더링으로 서서히 전환되는 gif를 첨부하였다. [원본 사진](assets/reference.jpg)과 [렌더링 이미지](assets/render.png)를 함께 포함하였다.
 
 ## References
 
