@@ -5,9 +5,8 @@ from pyglet.math import Mat4, Vec3
 from pyglet.window import key, mouse
 from camera import TrackballCamera
 
-from geometry import CubeMesh
+from geometry import CubeMesh, CylinderMesh
 from scene import build_scene
-
 
 VERTEX_SHADER = """#version 330 core
 in vec3 position;
@@ -31,17 +30,23 @@ void main() {
 }
 """
 
+
 class CornellWindow(pyglet.window.Window):
     def __init__(self):
         super().__init__(
-            width=1100, height=720,
-            config=gl.Config(major_version=3, minor_version=3,
-                             depth_size=24, double_buffer=True))
+            width=1100,
+            height=720,
+            config=gl.Config(
+                major_version=3, minor_version=3, depth_size=24, double_buffer=True
+            ),
+        )
         self.set_vsync(True)
         self.program = ShaderProgram(
-            Shader(VERTEX_SHADER, "vertex"), Shader(FRAGMENT_SHADER, "fragment"))
+            Shader(VERTEX_SHADER, "vertex"), Shader(FRAGMENT_SHADER, "fragment")
+        )
         self.meshes = {
             "cube": CubeMesh(self.program),
+            "cylinder": CylinderMesh(self.program, sides=32),
         }
         self.parts = build_scene()
         self.camera = TrackballCamera()
@@ -53,7 +58,8 @@ class CornellWindow(pyglet.window.Window):
     def on_resize(self, width, height):
         gl.glViewport(0, 0, width, height)
         self.projection_matrix = Mat4.perspective_projection(
-            width / max(height, 1), 0.1, 120.0, 52.0)
+            width / max(height, 1), 0.1, 120.0, 52.0
+        )
 
     def on_draw(self):
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
@@ -63,7 +69,7 @@ class CornellWindow(pyglet.window.Window):
             for part in self.parts:
                 self.program["model"] = part.model()
                 self.program["color"] = part.color
-                self.meshes["cube"].draw()
+                self.meshes[part.mesh].draw()
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         if buttons & mouse.LEFT:
@@ -80,7 +86,6 @@ class CornellWindow(pyglet.window.Window):
         if symbol == key.R:
             self.camera = TrackballCamera()
             self.view_matrix = self.camera.view_matrix()
-
 
 
 def main():

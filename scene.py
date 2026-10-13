@@ -12,6 +12,8 @@ LIGHT_SIZE = 1.0
 WHITE = (1.0, 1.0, 1.0)
 RED = (1.0, 0.0, 0.0)
 GREEN = (0.0, 1.0, 0.0)
+EARBUD_WHITE = (0.96, 0.96, 0.96)
+YELLOW = (1.0, 0.85, 0.05)
 
 
 @dataclass
@@ -19,6 +21,7 @@ class Part:
     center: tuple[float, float, float]
     size: tuple[float, float, float]
     color: tuple[float, float, float]
+    mesh: str = "cube"
 
     def model(self) -> Mat4:
         translation = Mat4.from_translation(Vec3(*self.center))
@@ -81,5 +84,19 @@ def build_scene() -> list[Part]:
             center=((w + l) / 4, h + t / 2, d / 2),
             size=((w - l) / 2, t, l),
             color=WHITE,
+        ),
+        # Earbuds case
+        Part(
+            center=(2.8, 2.78 / 2, 8.8),
+            size=(5.0, 2.78, 5.02),
+            color=EARBUD_WHITE,
+            mesh="cube",
+        ),
+        # Glue-stick cap
+        Part(
+            center=(-4.8, 3.0 / 2, 5.3),
+            size=(3.0, 3.0, 3.0),
+            color=YELLOW,
+            mesh="cylinder",
         ),
     ]
