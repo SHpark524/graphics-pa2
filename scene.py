@@ -52,18 +52,18 @@ def build_scene() -> list[Part]:
             color=WHITE,
         ),
 
-        # Right wall
+        # Left wall
         Part(
             center=(-w / 2 - t / 2, h / 2, d / 2),
             size=(t, h, d),
-            color=GREEN,
+            color=RED,
         ),
 
-        # Left wall
+        # Right wall
         Part(
             center=(w / 2 + t / 2, h / 2, d / 2),
             size=(t, h, d),
-            color=RED,
+            color=GREEN,
         ),
 
         # Ceiling
