@@ -34,8 +34,8 @@ void main() {
 class CornellWindow(pyglet.window.Window):
     def __init__(self):
         super().__init__(
-            width=1100,
-            height=720,
+            width=1024,
+            height=768,
             config=gl.Config(
                 major_version=3, minor_version=3, depth_size=24, double_buffer=True
             ),
@@ -60,7 +60,7 @@ class CornellWindow(pyglet.window.Window):
     def on_resize(self, width, height):
         gl.glViewport(0, 0, width, height)
         self.projection_matrix = Mat4.perspective_projection(
-            width / max(height, 1), 0.1, 120.0, 52.0
+            width / max(height, 1), 0.1, 120.0, TrackballCamera.VERTICAL_FOV
         )
 
     def on_draw(self):

@@ -88,20 +88,20 @@ def build_scene() -> list[Part]:
         ),
         # Earbuds case
         Part(
-            center=(2.8, 2.78 / 2, 8.8),
+            center=(4.20, 2.78 / 2, 9.57),
             size=(5.0, 2.78, 5.02),
             color=EARBUD_WHITE,
             mesh="rounded_box",
         ),
         Part(
-            center=(2.8, 2.78 / 2, 8.8),
+            center=(4.20, 2.78 / 2, 9.57),
             size=(5.0, 2.78, 5.02),
             color=CASE_SEAM,
             mesh="rounded_box_seam",
         ),
         # Glue-stick cap
         Part(
-            center=(-4.8, 3.0 / 2, 5.3),
+            center=(-4.16, 3.0 / 2, 4.47),
             size=(3.0, 3.0, 3.0),
             color=YELLOW,
             mesh="cylinder",
