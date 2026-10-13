@@ -12,7 +12,8 @@ LIGHT_SIZE = 1.0
 WHITE = (1.0, 1.0, 1.0)
 RED = (1.0, 0.0, 0.0)
 GREEN = (0.0, 1.0, 0.0)
-EARBUD_WHITE = (0.96, 0.96, 0.96)
+EARBUD_WHITE = (240 / 255, 240 / 255, 238 / 255)
+CASE_SEAM = (0.36, 0.36, 0.38)
 YELLOW = (1.0, 0.85, 0.05)
 
 
@@ -90,7 +91,13 @@ def build_scene() -> list[Part]:
             center=(2.8, 2.78 / 2, 8.8),
             size=(5.0, 2.78, 5.02),
             color=EARBUD_WHITE,
-            mesh="cube",
+            mesh="rounded_box",
+        ),
+        Part(
+            center=(2.8, 2.78 / 2, 8.8),
+            size=(5.0, 2.78, 5.02),
+            color=CASE_SEAM,
+            mesh="rounded_box_seam",
         ),
         # Glue-stick cap
         Part(

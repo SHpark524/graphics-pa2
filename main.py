@@ -5,7 +5,7 @@ from pyglet.math import Mat4, Vec3
 from pyglet.window import key, mouse
 from camera import TrackballCamera
 
-from geometry import CubeMesh, CylinderMesh
+from geometry import CubeMesh, CylinderMesh, RoundedBoxMesh, RoundedBoxSeamMesh
 from scene import build_scene
 
 VERTEX_SHADER = """#version 330 core
@@ -47,6 +47,8 @@ class CornellWindow(pyglet.window.Window):
         self.meshes = {
             "cube": CubeMesh(self.program),
             "cylinder": CylinderMesh(self.program, sides=32),
+            "rounded_box": RoundedBoxMesh(self.program),
+            "rounded_box_seam": RoundedBoxSeamMesh(self.program),
         }
         self.parts = build_scene()
         self.camera = TrackballCamera()

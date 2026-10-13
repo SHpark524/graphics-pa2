@@ -10,8 +10,11 @@ class Mesh:
         self.shades = shades
         self.indices = indices
         self.vertices = program.vertex_list_indexed(
-            len(shades), gl.GL_TRIANGLES, indices,
-            position=("f", positions), shade=("f", shades),
+            len(shades),
+            gl.GL_TRIANGLES,
+            indices,
+            position=("f", positions),
+            shade=("f", shades),
         )
 
     def draw(self):
@@ -26,7 +29,7 @@ def bake_static_parts(program, meshes, parts):
         offset = len(shades)
         model = part.model()
         for index in range(0, len(source.positions), 3):
-            point = model @ Vec4(*source.positions[index:index + 3], 1.0)
+            point = model @ Vec4(*source.positions[index : index + 3], 1.0)
             positions.extend(point[:3])
         shades.extend(source.shades)
         indices.extend(offset + index for index in source.indices)
@@ -44,16 +47,190 @@ def append_quad(positions, shades, indices, corners, shade):
 class CubeMesh(Mesh):
     def __init__(self, program):
         faces = (
-            ((-0.5, -0.5, 0.5), (0.5, -0.5, 0.5), (0.5, 0.5, 0.5), (-0.5, 0.5, 0.5), 1.0),
-            ((0.5, -0.5, -0.5), (-0.5, -0.5, -0.5), (-0.5, 0.5, -0.5), (0.5, 0.5, -0.5), 0.63),
-            ((-0.5, 0.5, 0.5), (0.5, 0.5, 0.5), (0.5, 0.5, -0.5), (-0.5, 0.5, -0.5), 0.86),
-            ((-0.5, -0.5, -0.5), (0.5, -0.5, -0.5), (0.5, -0.5, 0.5), (-0.5, -0.5, 0.5), 0.48),
-            ((0.5, -0.5, 0.5), (0.5, -0.5, -0.5), (0.5, 0.5, -0.5), (0.5, 0.5, 0.5), 0.78),
-            ((-0.5, -0.5, -0.5), (-0.5, -0.5, 0.5), (-0.5, 0.5, 0.5), (-0.5, 0.5, -0.5), 0.72),
+            (
+                (-0.5, -0.5, 0.5),
+                (0.5, -0.5, 0.5),
+                (0.5, 0.5, 0.5),
+                (-0.5, 0.5, 0.5),
+                1.0,
+            ),
+            (
+                (0.5, -0.5, -0.5),
+                (-0.5, -0.5, -0.5),
+                (-0.5, 0.5, -0.5),
+                (0.5, 0.5, -0.5),
+                0.63,
+            ),
+            (
+                (-0.5, 0.5, 0.5),
+                (0.5, 0.5, 0.5),
+                (0.5, 0.5, -0.5),
+                (-0.5, 0.5, -0.5),
+                0.86,
+            ),
+            (
+                (-0.5, -0.5, -0.5),
+                (0.5, -0.5, -0.5),
+                (0.5, -0.5, 0.5),
+                (-0.5, -0.5, 0.5),
+                0.48,
+            ),
+            (
+                (0.5, -0.5, 0.5),
+                (0.5, -0.5, -0.5),
+                (0.5, 0.5, -0.5),
+                (0.5, 0.5, 0.5),
+                0.78,
+            ),
+            (
+                (-0.5, -0.5, -0.5),
+                (-0.5, -0.5, 0.5),
+                (-0.5, 0.5, 0.5),
+                (-0.5, 0.5, -0.5),
+                0.72,
+            ),
         )
         positions, shades, indices = [], [], []
         for face in faces:
             append_quad(positions, shades, indices, face[:4], face[4])
+        super().__init__(program, positions, shades, indices)
+
+
+class RoundedBoxMesh(Mesh):
+
+    def __init__(self, program, dimensions=(5.0, 2.78, 5.02), radius=1.3, segments=20):
+        positions, shades, indices = [], [], []
+        half = tuple(dimension / 2 for dimension in dimensions)
+        core = tuple(value - radius for value in half)
+        light = (0.3, 0.75, 0.55)
+        light_length = math.sqrt(sum(value * value for value in light))
+        light = tuple(value / light_length for value in light)
+
+        faces = (
+            (0, -1, 1, 2),
+            (0, 1, 1, 2),
+            (1, -1, 0, 2),
+            (1, 1, 0, 2),
+            (2, -1, 0, 1),
+            (2, 1, 0, 1),
+        )
+
+        def rounded_point(point):
+            physical = tuple(point[axis] * dimensions[axis] for axis in range(3))
+            closest = tuple(
+                max(-core[axis], min(core[axis], physical[axis])) for axis in range(3)
+            )
+            delta = tuple(physical[axis] - closest[axis] for axis in range(3))
+            length = math.sqrt(sum(value * value for value in delta))
+            if length > 1e-8:
+                normal = tuple(value / length for value in delta)
+                physical = tuple(
+                    closest[axis] + radius * normal[axis] for axis in range(3)
+                )
+            else:
+                normal = tuple(
+                    1.0 if abs(point[axis]) > 0.499 else 0.0 for axis in range(3)
+                )
+            normalized = tuple(physical[axis] / dimensions[axis] for axis in range(3))
+            shade = 0.58 + 0.38 * max(
+                0.0, sum(normal[axis] * light[axis] for axis in range(3))
+            )
+            return normalized, shade
+
+        for axis, sign, u_axis, v_axis in faces:
+            for row in range(segments):
+                v0 = -0.5 + row / segments
+                v1 = -0.5 + (row + 1) / segments
+                for column in range(segments):
+                    u0 = -0.5 + column / segments
+                    u1 = -0.5 + (column + 1) / segments
+                    corners = []
+                    for u, v in ((u0, v0), (u1, v0), (u1, v1), (u0, v1)):
+                        point = [0.0, 0.0, 0.0]
+                        point[axis] = sign * 0.5
+                        point[u_axis] = u
+                        point[v_axis] = v
+                        corners.append(rounded_point(point))
+
+                    start = len(shades)
+                    for point, shade in corners:
+                        positions.extend(point)
+                        shades.append(shade)
+                    indices.extend(
+                        (start, start + 1, start + 2, start, start + 2, start + 3)
+                    )
+
+        super().__init__(program, positions, shades, indices)
+
+
+class RoundedBoxSeamMesh(Mesh):
+    """A thin strip following the middle perimeter of a rounded box."""
+
+    def __init__(
+        self,
+        program,
+        dimensions=(5.0, 2.78, 5.02),
+        radius=1.3,
+        seam_width=0.055,
+        seam_height=0.15,
+        segments=40,
+        surface_offset=0.006,
+    ):
+        positions, shades, indices = [], [], []
+        half = tuple(dimension / 2 for dimension in dimensions)
+        core = tuple(value - radius for value in half)
+
+        def surface_point(point, side_axis, side_sign):
+            physical = tuple(point[axis] * dimensions[axis] for axis in range(3))
+            closest = tuple(
+                max(-core[axis], min(core[axis], physical[axis])) for axis in range(3)
+            )
+            delta = tuple(physical[axis] - closest[axis] for axis in range(3))
+            length = math.sqrt(sum(value * value for value in delta))
+            if length > 1e-8:
+                normal = tuple(value / length for value in delta)
+                physical = tuple(
+                    closest[axis] + radius * normal[axis] for axis in range(3)
+                )
+            else:
+                normal = tuple(
+                    side_sign if axis == side_axis else 0.0 for axis in range(3)
+                )
+
+            physical = tuple(
+                physical[axis] + surface_offset * normal[axis] for axis in range(3)
+            )
+            return tuple(physical[axis] / dimensions[axis] for axis in range(3))
+
+        for side_axis in (0, 2):
+            along_axis = 2 if side_axis == 0 else 0
+            low_y = (seam_height - seam_width / 2) / dimensions[1]
+            high_y = (seam_height + seam_width / 2) / dimensions[1]
+            for side_sign in (-1, 1):
+                for step in range(segments):
+                    along0 = -0.5 + step / segments
+                    along1 = -0.5 + (step + 1) / segments
+                    corners = []
+                    for along, y in (
+                        (along0, low_y),
+                        (along0, high_y),
+                        (along1, high_y),
+                        (along1, low_y),
+                    ):
+                        point = [0.0, 0.0, 0.0]
+                        point[side_axis] = side_sign * 0.5
+                        point[along_axis] = along
+                        point[1] = y
+                        corners.append(surface_point(point, side_axis, side_sign))
+
+                    start = len(shades)
+                    for point in corners:
+                        positions.extend(point)
+                        shades.append(0.95)
+                    indices.extend(
+                        (start, start + 1, start + 2, start, start + 2, start + 3)
+                    )
+
         super().__init__(program, positions, shades, indices)
 
 
@@ -69,7 +246,9 @@ class CylinderMesh(Mesh):
             light = 0.5 * math.cos((a + b) / 2) + 0.7 * math.sin((a + b) / 2)
             shade = 0.67 + 0.22 * light
             append_quad(
-                positions, shades, indices,
+                positions,
+                shades,
+                indices,
                 ((x0, -0.5, z0), (x1, -0.5, z1), (x1, 0.5, z1), (x0, 0.5, z0)),
                 shade,
             )
@@ -79,42 +258,4 @@ class CylinderMesh(Mesh):
                     positions.extend(vertex)
                     shades.append(cap_shade)
                 indices.extend((start, start + 1, start + 2))
-        super().__init__(program, positions, shades, indices)
-
-
-class SphereMesh(Mesh):
-
-    def __init__(self, program, sides=12, stacks=6):
-        positions, shades, indices = [], [], []
-
-        def point(latitude, longitude):
-            radius = 0.5 * math.cos(latitude)
-            return (
-                radius * math.cos(longitude),
-                0.5 * math.sin(latitude),
-                radius * math.sin(longitude),
-            )
-
-        for stack in range(stacks):
-            low = -math.pi / 2 + math.pi * stack / stacks
-            high = -math.pi / 2 + math.pi * (stack + 1) / stacks
-            for side in range(sides):
-                left = 2 * math.pi * side / sides
-                right = 2 * math.pi * (side + 1) / sides
-                a, b = point(low, left), point(low, right)
-                c, d = point(high, right), point(high, left)
-                for triangle in ((a, b, c), (a, c, d)):
-                    if stack == 0 and triangle == (a, b, c):
-                        continue
-                    if stack == stacks - 1 and triangle == (a, c, d):
-                        continue
-                    center = tuple(sum(vertex[axis] for vertex in triangle) / 3 for axis in range(3))
-                    length = math.sqrt(sum(value * value for value in center))
-                    light = (0.35 * center[0] + 0.75 * center[1] + 0.55 * center[2]) / length
-                    shade = 0.55 + 0.38 * max(0.0, light)
-                    start = len(shades)
-                    for vertex in triangle:
-                        positions.extend(vertex)
-                        shades.append(shade)
-                    indices.extend((start, start + 1, start + 2))
         super().__init__(program, positions, shades, indices)
