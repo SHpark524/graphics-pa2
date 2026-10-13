@@ -5,7 +5,7 @@ from pyglet.math import Mat4, Vec3, Quaternion
 
 class TrackballCamera:
     def __init__(self):
-        self.target = Vec3(0, 12.5, 7.5)
+        self.target = Vec3(0, 10.0, 7.5)
         self.distance = 42.5
         self.rotation = (1.0, 0.0, 0.0, 0.0)
         self.tx = 0.0
@@ -53,10 +53,10 @@ class TrackballCamera:
 
         a, b = self.rotation, q
         result = (
-            a[0]*b[0] - a[1]*b[1] - a[2]*b[2] - a[3]*b[3],
-            a[0]*b[1] + a[1]*b[0] + a[2]*b[3] - a[3]*b[2],
-            a[0]*b[2] - a[1]*b[3] + a[2]*b[0] + a[3]*b[1],
-            a[0]*b[3] + a[1]*b[2] - a[2]*b[1] + a[3]*b[0],
+            a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3],
+            a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2],
+            a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1],
+            a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0],
         )
         norm = math.sqrt(sum(v * v for v in result))
         self.rotation = tuple(v / norm for v in result)
@@ -70,10 +70,7 @@ class TrackballCamera:
         self.distance = max(5.0, min(150.0, self.distance))
 
     def view_matrix(self):
-        # Trackball rotations are stored as (w, x, y, z); pyglet uses (x, y, z, w).
-        q = Quaternion(
-            self.rotation[1], self.rotation[2], self.rotation[3], self.rotation[0]
-        )
+        q = Quaternion(*self.rotation)
         return (
             Mat4.from_translation(Vec3(self.tx, self.ty, -self.distance))
             @ Mat4.from_rotation(math.pi, Vec3(0, 1, 0))
